@@ -1,0 +1,79 @@
+---
+title: "Harvard Enrollment"
+author: "Niel Schrage"
+date: "4/10/2019"
+output: html_document
+---
+Specifications
+- You must use data from Spring 2019 and from at least one past semester.
+- Your Rmd file will need to load, merge and clean up the data. Use lots of comments. Try to fix errors. Note issues that you would like to look more closely at, if you ever come back to this topic.
+- must use color scale different than normal 
+- must use theme
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# load libraries
+library(tidyverse)
+library(ggthemes)
+library(fs)
+library(lubridate)
+library(viridis)
+library(gganimate)
+library(ggplot2)
+library(janitor)
+library(readxl)
+
+```
+
+```{r load_data, echo=FALSE}
+
+# downloaded the xlsx file from the harvard website for spring enrollments in
+# 2017, 2018, and 2019
+
+download.file(url="http://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_2017_03_07_final_0.xlsx", destfile = "reg_2017.xlsx", mode = "wb" )
+
+download.file(url="https://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_03.06.18.xlsx", destfile = "reg_2018.xlsx", mode = "wb" )
+
+download.file(url="https://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_3.22.19.xlsx", destfile = "reg_2019.xlsx", mode = "wb" )
+
+# read in the xlsx files for the spring enrollment data from 2017, 2018,
+# and 2019
+
+x_2017 <- read_excel("reg_2017.xlsx", skip = 3) %>% 
+  clean_names() %>% 
+  filter(! is.na(course_name)) %>% 
+  select(course_id, course_title, course_name, u_grad)
+
+x_2018 <- read_excel("reg_2018.xlsx", skip = 3) %>% 
+  clean_names() %>% 
+  filter(! is.na(course_name)) %>% 
+  select(course_id, course_title, course_name, u_grad)
+
+x_2019 <- read_excel("reg_2019.xlsx", skip = 3) %>% 
+  clean_names() %>% 
+  filter(! is.na(course_name)) %>% 
+  select(course_id, course_title, course_name, u_grad)
+
+# deleted the xlsx files after loading the data into my r session
+
+fs::file_delete(c("reg_2017.xlsx","reg_2018.xlsx", "reg_2019.xlsx")) 
+
+```
+
+```{r clean_data, echo=FALSE}
+
+# originally I tried an anti join, but it cut down the number of courses from
+# ~2000 perr year to just 802 over all
+
+enrollment <- anti_join(x_2017, x_2018, x_2019, by = "course_id", suffix = c(".2017", ".2018", ".2019"))
+
+
+
+
+```
+
+```{r show_data, echo=FALSE}
+
+```
+
