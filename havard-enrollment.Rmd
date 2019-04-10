@@ -79,7 +79,15 @@ enrollment <- bind_rows(x_2017, x_2018, x_2019)
 # originally wanted to take data from 1999, 2009, and 2019 to paint the picture
 # of the massive move from gov to computer science.
 
-enrollment %>% 
+top_departments <- enrollment %>% 
+  
+  select(course_department, course_title, year, u_grad) %>% 
+  
+  # filter out gen eds
+  
+  filter(course_department != "General Education") %>% 
+  
+  mutate(course_department = fct_relevel(course_department, c("Economics", "Computer Science", "Mathematics", "Psychology", "Government"))) %>% 
   
   # group by department and year
   
@@ -87,17 +95,27 @@ enrollment %>%
   
   # calculate the total number of undergrades in each department
   
-  summarize(courses = n(), total = sum(u_grad)) %>% 
+  summarize(total = sum(u_grad)) %>% 
   
   # arrange highest to lowest
   
   arrange(desc(total)) %>% 
   
-  # take the top 6 departments
+  # view the top departments 
+  #"Economics", "Computer Science", "Mathematics", "Psychology", "Government"
   
-  slice(1:6)
+  slice(1:6) %>% 
 
-# what else should I add here? 
+  # filter so just these departments are included. 
+  
+  filter(course_department %in%c("Economics", "Computer Science", "Mathematics", "Psychology", "Government")) 
+  
+
+
+
+
+
+
 
 
 
@@ -111,6 +129,13 @@ enrollment %>%
 
 
 ```{r show_data, echo=FALSE}
+top_departments %>% 
+  
+  ggplot(aes(x = course_department, y = total)) + 
+  geom_col(show.legend = NA) +
+  scale_color_brewer(aes(fill = ..x..), palette = 1) +
+  theme_tufte() 
+
 
 ```
 
