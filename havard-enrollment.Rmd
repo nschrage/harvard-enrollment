@@ -13,7 +13,8 @@ Specifications
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-# load libraries
+# loaded libraries
+
 library(tidyverse)
 library(ggthemes)
 library(fs)
@@ -37,41 +38,77 @@ download.file(url="https://registrar.fas.harvard.edu/files/fas-registrar/files/c
 
 download.file(url="https://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_3.22.19.xlsx", destfile = "reg_2019.xlsx", mode = "wb" )
 
-# read in the xlsx files for the spring enrollment data from 2017, 2018,
-# and 2019
+# read in the xlsx files for the spring enrollment data from 2017, 2018, and
+# 2019. used mutate to add a column to each with the year, to make it easier to
+# come to graph later. I also started data cleaning. for each of the years, I
+# used the clean_names function from the janitor library to make the data easier
+# to work with. I also filtered out any rows that did not have a result for
+# course name.
 
 x_2017 <- read_excel("reg_2017.xlsx", skip = 3) %>% 
+  mutate(year = 2017) %>% 
   clean_names() %>% 
-  filter(! is.na(course_name)) %>% 
-  select(course_id, course_title, course_name, u_grad)
+  filter(! is.na(course_name)) 
 
 x_2018 <- read_excel("reg_2018.xlsx", skip = 3) %>% 
+  mutate(year = 2018) %>% 
   clean_names() %>% 
-  filter(! is.na(course_name)) %>% 
-  select(course_id, course_title, course_name, u_grad)
+  filter(! is.na(course_name)) 
 
 x_2019 <- read_excel("reg_2019.xlsx", skip = 3) %>% 
+  mutate(year = 2019) %>% 
   clean_names() %>% 
-  filter(! is.na(course_name)) %>% 
-  select(course_id, course_title, course_name, u_grad)
+  filter(! is.na(course_name)) 
+ 
 
 # deleted the xlsx files after loading the data into my r session
 
 fs::file_delete(c("reg_2017.xlsx","reg_2018.xlsx", "reg_2019.xlsx")) 
 
-```
+# joined the data frames together using bind rows, like we did in class for the NYT data
 
-```{r clean_data, echo=FALSE}
-
-# originally I tried an anti join, but it cut down the number of courses from
-# ~2000 perr year to just 802 over all
-
-enrollment <- anti_join(x_2017, x_2018, x_2019, by = "course_id", suffix = c(".2017", ".2018", ".2019"))
-
+enrollment <- bind_rows(x_2017, x_2018, x_2019)
 
 
 
 ```
+
+```{r explore_data, echo=FALSE}
+
+# i'm interested in seeing how department enrollment changes each year. I
+# originally wanted to take data from 1999, 2009, and 2019 to paint the picture
+# of the massive move from gov to computer science.
+
+enrollment %>% 
+  
+  # group by department and year
+  
+  group_by(course_department, year) %>%
+  
+  # calculate the total number of undergrades in each department
+  
+  summarize(courses = n(), total = sum(u_grad)) %>% 
+  
+  # arrange highest to lowest
+  
+  arrange(desc(total)) %>% 
+  
+  # take the top 6 departments
+  
+  slice(1:6)
+
+# what else should I add here? 
+
+
+
+
+
+
+
+```
+
+
+
 
 ```{r show_data, echo=FALSE}
 
