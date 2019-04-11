@@ -24,6 +24,8 @@ library(gganimate)
 library(ggplot2)
 library(janitor)
 library(readxl)
+library(ggrepel)
+
 
 ```
 
@@ -69,8 +71,6 @@ fs::file_delete(c("reg_2017.xlsx","reg_2018.xlsx", "reg_2019.xlsx"))
 
 enrollment <- bind_rows(x_2017, x_2018, x_2019)
 
-
-
 ```
 
 ```{r explore_data, echo=FALSE}
@@ -106,36 +106,27 @@ top_departments <- enrollment %>%
   
   slice(1:6) %>% 
 
-  # filter so just these departments are included. 
+  # filter so just the top departments are included. 
   
   filter(course_department %in%c("Economics", "Computer Science", "Mathematics", "Psychology", "Government")) 
   
-
-
-
-
-
-
-
-
-
-
-
-
-
 ```
 
-
-
-
-```{r show_data, echo=FALSE}
+```{r show_data, echo=FALSE, results='asis'}
 top_departments %>% 
   
-  ggplot(aes(x = course_department, y = total)) + 
+  ggplot(aes(x = course_department, y = total, fill = ..x..)) + 
   geom_col(show.legend = NA) +
-  scale_color_brewer(aes(fill = ..x..), palette = 1) +
-  theme_tufte() 
-
+  labs(title = "Harvard's Top Departments by Enrollment 2017 - 2019",
+       subtitle = "Year: {closest_state}",
+       caption = "Harvard Registrar")+
+  xlab("Academic Departments") + 
+  ylab("Total Undergraduate Enrollment") +
+  #geom_text_repel() +
+  scale_color_brewer() +
+  theme_tufte() +
+  transition_states(year) +
+  ease_aes('cubic-in-out')
 
 ```
 
