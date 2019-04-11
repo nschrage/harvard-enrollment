@@ -4,11 +4,6 @@ author: "Niel Schrage"
 date: "4/10/2019"
 output: html_document
 ---
-Specifications
-- You must use data from Spring 2019 and from at least one past semester.
-- Your Rmd file will need to load, merge and clean up the data. Use lots of comments. Try to fix errors. Note issues that you would like to look more closely at, if you ever come back to this topic.
-- must use color scale different than normal 
-- must use theme
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -41,11 +36,11 @@ download.file(url="https://registrar.fas.harvard.edu/files/fas-registrar/files/c
 download.file(url="https://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_3.22.19.xlsx", destfile = "reg_2019.xlsx", mode = "wb" )
 
 # read in the xlsx files for the spring enrollment data from 2017, 2018, and
-# 2019. used mutate to add a column to each with the year, to make it easier to
-# come to graph later. I also started data cleaning. for each of the years, I
-# used the clean_names function from the janitor library to make the data easier
-# to work with. I also filtered out any rows that did not have a result for
-# course name.
+# 2019. skipped three rows that were not useful. used mutate to add a column to
+# each with the year, to make it easier to come to graph later. I also started
+# data cleaning. for each of the years, I used the clean_names function from the
+# janitor library to make the data easier to work with. I also filtered out any
+# rows that did not have a result for course name.
 
 x_2017 <- read_excel("reg_2017.xlsx", skip = 3) %>% 
   mutate(year = 2017) %>% 
@@ -81,11 +76,15 @@ enrollment <- bind_rows(x_2017, x_2018, x_2019)
 
 top_departments <- enrollment %>% 
   
+  # select the variables to work with
+  
   select(course_department, course_title, year, u_grad) %>% 
   
   # filter out gen eds
   
   filter(course_department != "General Education") %>% 
+  
+  # relevel the courses so that they are in descending order -- has to be before group by 
   
   mutate(course_department = fct_relevel(course_department, c("Economics", "Computer Science", "Mathematics", "Psychology", "Government"))) %>% 
   
@@ -115,18 +114,50 @@ top_departments <- enrollment %>%
 ```{r show_data, echo=FALSE, results='asis'}
 top_departments %>% 
   
-  ggplot(aes(x = course_department, y = total, fill = ..x..)) + 
-  geom_col(show.legend = NA) +
-  labs(title = "Harvard's Top Departments by Enrollment 2017 - 2019",
-       subtitle = "Year: {closest_state}",
-       caption = "Harvard Registrar")+
-  xlab("Academic Departments") + 
-  ylab("Total Undergraduate Enrollment") +
-  #geom_text_repel() +
-  scale_color_brewer() +
-  theme_tufte() +
-  transition_states(year) +
-  ease_aes('cubic-in-out')
+  # create plot with x as the department (we manually ordered that earlier), y
+  # is the total number of undergraduates, and fill = ..x.. to map the color
+  # package
+  
+  ggplot(aes(x = course_department, y = total)) +
+  
+    # turned off the legend, wasn't helpful
+  
+    geom_col(show.legend = FALSE, aes(fill = ..x..)) +
+  
+    # added title, subtitle, caption for ease of understanding
+  
+    labs(title = "Harvard's Top Departments by Enrollment 2017 - 2019",
+       
+      # included updating year {here}
+      
+      subtitle = "Year: {closest_state}",
+      caption = "Harvard Registrar 2017 - 2019")+
+   
+    # added X and Y axis labels  
+    
+    xlab("Top Academic Departments Between 2017 - 2019") + 
+    ylab("Total Undergraduate Enrollment") +
+   
+    # manually scaled the y axis breaks to make the graph easier to understand
+    
+    scale_y_continuous(breaks = seq(0, 2500, by = 250)) +
+  
+    # colored each department to highlight diffences... used one of the options
+    # from Viridis
+    
+    scale_fill_viridis(guide = FALSE, option = "E") +
+    
+    # applied the minimalist tufte theme that I am a fan of. 
+  
+    theme_tufte() +
+    
+    # gganimated the graph to progressively show the total by year
+
+    transition_states(year) +
+    
+    # added cubic in and out to make the time between movement slower
+      
+    ease_aes('cubic-in-out')
 
 ```
 
